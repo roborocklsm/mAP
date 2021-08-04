@@ -28,10 +28,12 @@ for xml_file in xml_list:
   root = tree.getroot()
   for info in root.findall("image"):
     boxes = info.findall("box")
+    path = info.attrib["name"]
+    path = '_'.join(path.split('/')[2:])
+    path = path.split('.')[0] + '.txt'
+    if os.path.exists(path):
+      os.remove(path)
     if boxes != []:
-      path = info.attrib["name"]
-      path = '_'.join(path.split('/')[2:])
-      path = path.split('.')[0] + '.txt'
       with open(path, "a") as new_f:
         for obj in boxes:
           obj_name = obj.attrib['label']
@@ -39,5 +41,11 @@ for xml_file in xml_list:
           top = obj.attrib['ytl']
           right = obj.attrib['xbr']
           bottom = obj.attrib['ybr']
-        new_f.write("%s %s %s %s %s\n" % (obj_name, left, top, right, bottom))
+          if obj_name == "pedestrian":
+            if abs(float(bottom) - float(top)) < 40 or abs(float(right) - float(left)) < 40:
+              continue
+          if obj_name == "vehicle":
+            if abs(float(bottom) - float(top)) < 120 or abs(float(right) - float(left)) < 120:
+              continue
+          new_f.write("%s %s %s %s %s\n" % (obj_name, left, top, right, bottom))
 print("Conversion completed!")
